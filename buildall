@@ -45,19 +45,27 @@ fi
 if [ -z $1 ]
 then
 	echo "must specify import path of go program to build"
+	echo ""
+	echo "usage:"
+	echo "buildall <import-path> [optional output dir]"
 	exit 1
 fi
 
 target=$1
-name=$(basename $target)
 output=${2:-.}
 
 function doBuild() {
-	echo ==> building $1 $2
-	dir=${output%%/}$1-$2
+	echo "==> building $1 $2"
+	dir=$output/$1-$2
+	echo "    output to $dir"
 	mkdir -p $dir
-	cd $dir && GOOS=$1 GOARCH=$2 go build $target
+	cd $dir && GOOS=$1 GOARCH=$2 go build $target 2>&1 | tee build-log
+	cd ..
 }
+
+go version > $output/build-info
+uname -a >> $output/build-info
+echo built on `date` >> $output/build-info
 
 while read line
 do
